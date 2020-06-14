@@ -6,22 +6,19 @@ import { Injectable } from "@angular/core";
 export class StorageService {
   set(key: string, value: any): Promise<any> {
     return new Promise((resolve, reject) => {
-      sessionStorage.setItem(key, value);
-      resolve();
+      resolve(sessionStorage.setItem(key, value));
     });
   }
 
   get(key: string): Promise<any> {
     return new Promise((resolve, reject) => {
-      sessionStorage.getItem(key);
-      resolve();
+      resolve(sessionStorage.getItem(key));
     });
   }
 
   remove(key: string): Promise<any> {
     return new Promise((resolve, reject) => {
-      sessionStorage.removeItem(key);
-      resolve();
+      resolve(sessionStorage.removeItem(key));
     });
   }
 
