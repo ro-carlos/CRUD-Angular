@@ -65,7 +65,7 @@ export class AuthenticationService implements OnDestroy {
   async signup(username: string, email: string, password: string) {
     try {
       const response = await this.signUp(username, email, password).toPromise();
-      await this.processLoginService(response, username);
+      await this.processLoginService(response, email);
       this.snackBar.open("Successful registration. Check your email", "ok", {
         duration: 2000,
       });

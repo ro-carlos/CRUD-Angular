@@ -1,6 +1,8 @@
 <mat-toolbar color="primary">
   <mat-toolbar-row>
-    <span>Web Application</span>
+    <div class="pointer mr-3" [routerLink]="['/']">
+      <span>Web Application</span>
+    </div>
     <div _ngcontent-oqv-c51="" class="flex-spacer"></div>
     <div *ngIf="displayLogoutButton" class="pointer mr-3" (click)="logout()">
       Logout
