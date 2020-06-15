@@ -1,0 +1,20 @@
+<form [formGroup]="form">
+  <div class="row">
+    <div class="col-md-4">
+      <mat-form-field class="w-100">
+        <mat-label>{{ title }}</mat-label>
+        <input
+          [(ngModel)]="value"
+          [required]="isRequired"
+          matInput
+          formControlName="field"
+          (focus)="onFocus($event)"
+          (blur)="onBlur($event)"
+        />
+        <mat-error *ngIf="form.get('field').hasError('required')">
+          {{ title }} is <strong>Required</strong>
+        </mat-error>
+      </mat-form-field>
+    </div>
+  </div>
+</form>

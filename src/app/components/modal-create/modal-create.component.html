@@ -1,0 +1,89 @@
+<h2 mat-dialog-title>
+  <span *ngIf="!data.edit">
+    Add Item
+  </span>
+  <span *ngIf="data.edit">
+    Edit Item
+  </span>
+</h2>
+<mat-dialog-content class="mat-typography">
+  <form [formGroup]="form">
+    <div class="row">
+      <div class="col-md-4">
+        <mat-form-field class="w-100">
+          <mat-label>Name</mat-label>
+          <input matInput placeholder="Name" required formControlName="name" />
+          <mat-error *ngIf="form.get('name').hasError('required')">
+            Name is <strong>Required</strong>
+          </mat-error>
+        </mat-form-field>
+      </div>
+      <div class="col-md-4">
+        <mat-form-field class="w-100">
+          <mat-label>Nationality</mat-label>
+          <input
+            matInput
+            placeholder="Nationality"
+            required
+            formControlName="nationality"
+          />
+          <mat-error *ngIf="form.get('nationality').hasError('required')">
+            Nationality is <strong>Required</strong>
+          </mat-error>
+        </mat-form-field>
+      </div>
+      <div class="col-md-4">
+        <mat-form-field class="w-100">
+          <mat-label>Birthday</mat-label>
+          <input
+            formControlName="birthday"
+            [matDatepicker]="picker"
+            readonly="true"
+            required
+            matInput
+            (click)="picker.open()"
+          />
+          <mat-datepicker-toggle
+            matSuffix
+            [for]="picker"
+          ></mat-datepicker-toggle>
+          <mat-datepicker #picker></mat-datepicker>
+          <mat-error *ngIf="form.get('birthday').hasError('required')">
+            Birthday is <strong>Required</strong>
+          </mat-error>
+        </mat-form-field>
+      </div>
+
+      <div class="col-md-4">
+        <mat-form-field class="w-100">
+          <mat-label>Web site</mat-label>
+          <input
+            matInput
+            placeholder="Name"
+            required
+            formControlName="website"
+          />
+          <mat-error *ngIf="form.get('website').hasError('required')">
+            Web site is <strong>Required</strong>
+          </mat-error>
+        </mat-form-field>
+      </div>
+    </div>
+  </form>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button mat-button mat-dialog-close>Close</button>
+  <button
+    [disabled]="!form.valid"
+    mat-raised-button
+    color="primary"
+    (click)="addItem()"
+  >
+    <span *ngIf="!data.edit">
+      Add Item
+    </span>
+    <span *ngIf="data.edit">
+      Edit Item
+    </span>
+  </button>
+</mat-dialog-actions>

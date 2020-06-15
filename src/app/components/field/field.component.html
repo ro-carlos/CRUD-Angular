@@ -1,0 +1,25 @@
+<div *ngIf="field.column.isVisible">
+  <ng-container *ngTemplateOutlet="itemTemplateRef"></ng-container>
+</div>
+
+<ng-template #text>
+  <app-text-field
+    [title]="field.column.header"
+    [isEditable]="field.column.isEditable"
+    [isRequired]="field.column.esRequired"
+    [value]="value"
+    (change)="onInputChange($event)"
+  >
+  </app-text-field>
+</ng-template>
+
+<ng-template #date>
+  <app-text-field
+    [title]="field.column.header"
+    [isEditable]="field.column.isEditable"
+    [isRequired]="field.column.esRequired"
+    [value]="value"
+    (change)="onInputChange($event)"
+  >
+  </app-text-field>
+</ng-template>
