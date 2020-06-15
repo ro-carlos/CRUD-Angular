@@ -56,15 +56,17 @@
         </div>
       </form>
     </div>
-    <div class="col-md-12">
+    <div class="col-md-2">
       <button (click)="add()" mat-raised-button color="primary">Add</button>
     </div>
-    <div class="col-12 mt-2">
+    <div class="col-md-10">
       <mat-form-field class="w-100">
-        <mat-label>Find by ID</mat-label>
-        <input matInput (keyup)="filterById($event)" placeholder="" />
+        <mat-label>Filter by Id, Name, Website and Nationality</mat-label>
+        <input matInput (keyup)="filter($event)" placeholder="" />
       </mat-form-field>
+    </div>
 
+    <div class="col-12 mt-2">
       <table mat-table [dataSource]="dataSource" class="mat-elevation-z8 w-100">
         <ng-container matColumnDef="id">
           <th mat-header-cell *matHeaderCellDef>ID</th>

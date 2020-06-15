@@ -1,5 +1,6 @@
 import { Component, OnInit } from "@angular/core";
 import { MatSnackBar } from "@angular/material";
+import { Router } from "@angular/router";
 import { Subject } from "rxjs";
 import { takeUntil } from "rxjs/operators";
 import { AuthenticationService } from "src/app/services/authentication/authentication.service";
@@ -17,6 +18,7 @@ export class NavbarComponent implements OnInit {
 
   constructor(
     private authenticationService: AuthenticationService,
+    private router: Router,
     private snackBar: MatSnackBar
   ) {}
 
@@ -33,14 +35,9 @@ export class NavbarComponent implements OnInit {
     this.unsubscribe.complete();
   }
 
-  logout() {
-    this.authenticationService
-      .logout()
-      .pipe(takeUntil(this.unsubscribe))
-      .subscribe(() => {
-        this.snackBar.open("Log out", "ok", {
-          duration: 2000,
-        });
-      });
+  async logout() {
+    this.authenticationService.logout().then((response) => {
+      this.router.navigate(["login"], { replaceUrl: true });
+    });
   }
 }

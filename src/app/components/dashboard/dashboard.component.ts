@@ -1,7 +1,12 @@
 import { Component, OnInit } from "@angular/core";
 import { FormControl, FormGroup, Validators } from "@angular/forms";
 import { MatDialog, MatTableDataSource } from "@angular/material";
+import * as moment from "moment";
+import { Subject, throwError } from "rxjs";
+import { catchError, map, takeUntil } from "rxjs/operators";
+import { BackendError } from "src/app/model/backend-error";
 import { Item } from "src/app/model/item";
+import { LocalCrudService } from "src/app/services/local-crud.service";
 import Swal from "sweetalert2";
 import { ModalCreateComponent } from "../modal-create/modal-create.component";
 
@@ -29,25 +34,20 @@ export class DashboardComponent implements OnInit {
   ];
   dataSource = new MatTableDataSource();
 
-  constructor(private dialog: MatDialog) {}
+  private unsubscribe: Subject<void> = new Subject();
+
+  constructor(
+    private dialog: MatDialog,
+    private crudService: LocalCrudService
+  ) {}
 
   ngOnInit() {
-    this.dataSource.data = [
-      {
-        id: "1",
-        name: "Carlos",
-        website: "www.google.com",
-        nationality: "Colombian",
-        birthday: "1996-12-25",
-      },
-      {
-        id: "2",
-        name: "Alejandro",
-        website: "www.google.com",
-        nationality: "Colombian",
-        birthday: "1998-04-28",
-      },
-    ];
+    this.getItems();
+  }
+
+  ngOnDestroy() {
+    this.unsubscribe.next();
+    this.unsubscribe.complete();
   }
 
   minDateChange(e) {
@@ -58,20 +58,51 @@ export class DashboardComponent implements OnInit {
     this.max = e.value;
   }
 
-  findByDates() {
-    console.log("Find by dates");
+  async findByDates() {
+    const startDate = moment(this.dateForm.controls.startDate.value).format(
+      "YYYY-MM-DD"
+    );
+    const endDate = moment(this.dateForm.controls.endDate.value).format(
+      "YYYY-MM-DD"
+    );
+    const response = await this.crudService
+      .filterByDates(startDate, endDate)
+      .pipe(
+        takeUntil(this.unsubscribe),
+        map(this.detectBackendError),
+        catchError(this.handleBackendError)
+      )
+      .toPromise();
+    this.dataSource.data = [...response.content];
   }
 
-  filterById(id: string) {
-    console.log("Filter by id: ", id);
+  async filter(event) {
+    const value = event.currentTarget.value;
+    if (value === null || value === undefined || value === "") {
+      this.getItems();
+    } else {
+      const response = await this.crudService
+        .filter(value)
+        .pipe(
+          takeUntil(this.unsubscribe),
+          map(this.detectBackendError),
+          catchError(this.handleBackendError)
+        )
+        .toPromise();
+      if (response && response.content && response.content.length > 0) {
+        this.dataSource.data = [...response.content];
+      } else {
+        this.dataSource.data = [];
+      }
+    }
   }
 
   add() {
     const dialogRef = this.dialog.open(ModalCreateComponent, {
       data: { edit: false },
     });
-    dialogRef.afterClosed().subscribe((result) => {
-      console.log("Add");
+    dialogRef.afterClosed().subscribe((item: Item) => {
+      this.getItems();
     });
   }
 
@@ -79,15 +110,14 @@ export class DashboardComponent implements OnInit {
     const dialogRef = this.dialog.open(ModalCreateComponent, {
       data: { edit: true, item },
     });
-    dialogRef.afterClosed().subscribe((result) => {
-      console.log("Update");
+    dialogRef.afterClosed().subscribe((item: Item) => {
+      this.getItems();
     });
   }
 
-  delete(id: string) {
+  async delete(id: string) {
     Swal.fire({
-      title: "Are you sure?",
-      text: "Accepting, you will delete item",
+      title: "Are you sure you want to remove item?",
       icon: "question",
       cancelButtonText: "Cancel",
       customClass: { popup: "swal-height27" },
@@ -97,8 +127,48 @@ export class DashboardComponent implements OnInit {
       confirmButtonText: "Accept",
     }).then((result) => {
       if (result.value) {
-        console.log("Delete item");
+        this.removeItem(id);
       }
     });
   }
+
+  private async getItems() {
+    const response = await this.crudService
+      .list()
+      .pipe(
+        takeUntil(this.unsubscribe),
+        map(this.detectBackendError),
+        catchError(this.handleBackendError)
+      )
+      .toPromise();
+    this.dataSource.data = [...response.content];
+  }
+
+  private async removeItem(id: string) {
+    await this.crudService
+      .removeItem(id)
+      .pipe(
+        takeUntil(this.unsubscribe),
+        map(this.detectBackendError),
+        catchError(this.handleBackendError)
+      )
+      .toPromise();
+    Swal.fire({ title: "Item Deleted Successfully", icon: "success" });
+    this.getItems();
+  }
+
+  private detectBackendError = (response) => {
+    if (response && response.backendError) {
+      console.error("RESPONSE:", response);
+      const error: BackendError = response;
+      throw error;
+    }
+    return response;
+  };
+
+  private handleBackendError = (error: BackendError) => {
+    const errorCode = error.errorCode ? error.errorCode : "001";
+    Swal.fire({ title: "Unexpected Error", icon: "question" });
+    return throwError(error);
+  };
 }

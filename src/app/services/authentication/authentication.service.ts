@@ -4,6 +4,8 @@ import { MatSnackBar } from "@angular/material";
 import { Router } from "@angular/router";
 import { from, Observable, Subject, throwError } from "rxjs";
 import { first, map } from "rxjs/operators";
+import { BackendResponse } from "src/app/model/response";
+import Swal from "sweetalert2";
 import { StorageService } from "../security/storage.service";
 
 @Injectable({
@@ -51,12 +53,13 @@ export class AuthenticationService implements OnDestroy {
     try {
       const response = await this.logIn(username, password).toPromise();
       await this.processLoginService(response, username);
-      this.snackBar.open("Successful login", "ok", {
+      this.snackBar.open("Login", "ok", {
         duration: 2000,
       });
     } catch (error) {
-      this.snackBar.open("Your username or password is incorrect", "error", {
-        duration: 2000,
+      Swal.fire({
+        title: "Your Username or Password is incorrect",
+        icon: "error",
       });
       this.handleError(error);
     }
@@ -66,45 +69,27 @@ export class AuthenticationService implements OnDestroy {
     try {
       const response = await this.signUp(username, email, password).toPromise();
       await this.processLoginService(response, email);
-      this.snackBar.open("Successful registration. Check your email", "ok", {
-        duration: 2000,
+      Swal.fire({
+        title: "Successful Registration. Check yor Email",
+        icon: "success",
       });
     } catch (error) {
-      this.snackBar.open("Unexpected error", "error", {
-        duration: 2000,
-      });
+      Swal.fire({ title: "Unexpected Error", icon: "error" });
       this.handleError(error);
     }
   }
 
-  // logout(): Observable<any> {
-  //   const url = this.backendUrl + "logout";
-
-  //   return this.http
-  //     .get(url, {
-  //       withCredentials: true,
-  //       observe: "response",
-  //     })
-  //     .pipe(
-  //       map((response) => {
-  //         return true;
-  //       }),
-  //       mergeMap(this.setUserIsLoggedOut),
-  //       tap(this.redirectToLoginPage),
-  //       catchError((error, caught) => caught)
-  //     );
-  // }
-
-  logout(): Observable<any> {
-    const observable = new Observable((subscriber) => {
-      setTimeout(() => {
-        this.setUserIsLoggedOut();
-        this.redirectToLoginPage();
-        subscriber.next();
-        subscriber.complete();
-      }, 0);
-    });
-    return observable;
+  async logout() {
+    try {
+      const response = await this.logOut().toPromise();
+      await this.setUserIsLoggedOut(response);
+      this.snackBar.open("Logout", "ok", {
+        duration: 2000,
+      });
+    } catch (error) {
+      Swal.fire({ title: "Unexpected Error", icon: "error" });
+      this.handleError(error);
+    }
   }
 
   async processLoginService(response, username) {
@@ -156,70 +141,81 @@ export class AuthenticationService implements OnDestroy {
   //   });
   // }
 
-  private logIn(username: string, password: string): Observable<any> {
+  // logOut(): Observable<any> {
+  //   const url = this.backendUrl + "logout";
+
+  //   return this.http
+  //     .get(url, {
+  //       withCredentials: true,
+  //       observe: "response",
+  //     })
+  //     .pipe(
+  //       map((response) => {
+  //         return true;
+  //       }),
+  //       tap(this.redirectToLoginPage),
+  //       catchError((error, caught) => caught)
+  //     );
+  // }
+
+  private logIn(
+    username: string,
+    password: string
+  ): Observable<BackendResponse> {
     const content = [
       {
         id: 1,
         value: "Backend response",
       },
     ];
-    const response = {
-      content,
-      number: 0,
-      size: 20,
-      totalElements: 20,
-      totalPages: 1,
-      status: 200,
-    };
+    const response = new BackendResponse(content, 0, 20, 20, 1, 200);
 
-    const observable = new Observable((subscriber) => {
+    return new Observable((subscriber) => {
       setTimeout(() => {
         subscriber.next(response);
         subscriber.complete();
       }, 0);
     });
-
-    return observable;
   }
 
   private signUp(
     username: string,
     email: string,
     password: string
-  ): Observable<any> {
+  ): Observable<BackendResponse> {
     const content = [
       {
         id: 1,
         value: "Backend response",
       },
     ];
-    const response = {
-      content,
-      number: 0,
-      size: 20,
-      totalElements: 20,
-      totalPages: 1,
-      status: 200,
-    };
+    const response = new BackendResponse(content, 0, 20, 20, 1, 200);
 
-    const observable = new Observable((subscriber) => {
+    return new Observable((subscriber) => {
       setTimeout(() => {
         subscriber.next(response);
         subscriber.complete();
       }, 0);
     });
-
-    return observable;
   }
 
-  private setUserIsLoggedOut = async () => {
+  private logOut(): Observable<BackendResponse> {
+    const response = new BackendResponse([], 0, 0, 0, 1, 200);
+    return new Observable((subscriber) => {
+      setTimeout(() => {
+        subscriber.next(response);
+        subscriber.complete();
+      }, 0);
+    });
+  }
+
+  private async setUserIsLoggedOut(response) {
+    if (response.status !== 200) {
+      throw new LoginError("Error in logout.", response.status);
+    }
     await Promise.all([this.storage.clear()]);
     this.loggedIn.next(false);
-  };
-
-  private redirectToLoginPage = () => {
-    this.router.navigate(["login"]);
-  };
+  }
 
   private handleError = (error: LoginError) => {
     let devMessage = "";
